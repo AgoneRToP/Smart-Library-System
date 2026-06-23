@@ -1,0 +1,15 @@
+# compiled output
+node_modules
+dist
+
+# dotenv environment variable files
+.env
+.env.sample
+.env.testing
+
+.git
+.gitignore
+
+Dockerfile
+.dockerignore
+docker-compose.yml

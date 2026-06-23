@@ -1,0 +1,8 @@
+allowBuilds:
+  '@scarf/scarf': false
+  bcrypt: false
+  core-js: false
+  fsevents: false
+  node-base64: false
+  nodemon: false
+  unrs-resolver: false

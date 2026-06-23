@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Library Management System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+    <!-- Навигационная панель -->
+    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <span class="text-2xl">📚</span>
+                <a href="/" class="font-bold text-xl tracking-tight text-indigo-600">SmartLibrary</a>
+            </div>
+            
+            <!-- Блок профиля и авторизации -->
+            <div id="auth-nav-block" class="flex items-center space-x-4">
+                <!-- Кнопки для неавторизованных пользователей -->
+                <button onclick="toggleModal('login-modal')" id="btn-nav-login" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Войти</button>
+                <button onclick="toggleModal('register-modal')" id="btn-nav-register" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">Регистрация</button>
+                
+                <!-- Блок для авторизованных (скрыт по дефолту) -->
+                <div id="user-profile-info" class="hidden flex items-center space-x-3">
+                    <span id="nav-user-name" class="text-sm font-semibold text-slate-700"></span>
+                    <span id="nav-user-role" class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-medium"></span>
+                    <button onclick="logout()" class="text-sm font-medium text-rose-600 hover:text-rose-700 transition">Выйти</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Главный контент -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        
+        <!-- Панель Администратора: Добавление книг (скрыта по дефолту) -->
+        <section id="admin-panel" class="hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-10">
+            <div class="border-b border-slate-100 pb-4 mb-6">
+                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">🛠️ Панель управления: Добавить книгу</h2>
+                <p class="text-slate-500 text-sm mt-0.5">Добавление новых экземпляров в единую базу данных MongoDB.</p>
+            </div>
+            <form id="add-book-form" onsubmit="handleAddBook(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Название книги</label>
+                    <input type="text" id="add-title" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Автор</label>
+                    <input type="text" id="add-author" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">ISBN код</label>
+                    <input type="text" id="add-isbn" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Год</label>
+                        <input type="number" id="add-year" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Копии</label>
+                        <input type="number" id="add-copies" min="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">Сохранить книгу</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Заголовок секции каталога -->
+        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-slate-900">Каталог цифровой библиотеки</h1>
+                <p class="text-slate-500 mt-1">Доступные книги и управление бронированием в реальном времени с кэшем Redis.</p>
+            </div>
+            <form action="/" method="GET" class="flex gap-2">
+                <input type="text" name="search" placeholder="Поиск по названию..." class="w-64 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Найти</button>
+            </form>
+        </div>
+
+        <!-- Сетка книг -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {{#each books}}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition duration-200">
+                <div class="aspect-[3/4] bg-slate-100 relative overflow-hidden group">
+                    {{#if this.coverImage}}
+                        <img src="/uploads/books/{{this.coverImage}}" alt="{{this.title}}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                    {{else}}
+                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                            <span class="text-4xl mb-2">📖</span>
+                            <span class="text-xs font-medium">Нет обложки</span>
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                        <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase block mb-1">ISBN: {{this.isbn}}</span>
+                        <h3 class="font-bold text-slate-900 text-lg leading-snug line-clamp-2 mb-1">{{this.title}}</h3>
+                        <p class="text-slate-600 text-sm mb-2">Автор: <span class="font-medium">{{this.author}}</span></p>
+                        <p class="text-slate-400 text-xs mb-4">Год издания: {{this.publishedYear}}</p>
+                    </div>
+                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <div>
+                            <span class="text-xs text-slate-400 block">В наличии:</span>
+                            <span class="text-sm font-bold {{#if this.availableCopies}}text-emerald-600{{else}}text-rose-500{{/if}}">{{this.availableCopies}} шт.</span>
+                        </div>
+                        {{#if this.availableCopies}}
+                            <button onclick="borrowBook('{{this._id}}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">Взять читать</button>
+                        {{else}}
+                            <button disabled class="bg-slate-100 text-slate-400 text-xs font-semibold px-4 py-2 rounded-md cursor-not-allowed">Нет на месте</button>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            <div class="col-span-full bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
+                <span class="text-5xl block mb-4">🔍</span>
+                <h3 class="text-lg font-bold text-slate-800">Книги не найдены</h3>
+            </div>
+            {{/each}}
+        </div>
+    </main>
+
+    <!-- Окно Авторизации (Login Modal) -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 relative mx-4">
+            <!-- Кнопка закрытия окна -->
+            <button onclick="toggleModal('login-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-semibold focus:outline-none">&times;</button>
+            
+            <h3 class="text-xl font-bold text-slate-900 mb-5 text-center">Вход в систему</h3>
+            
+            <!-- Стандартная форма входа -->
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Email</label>
+                    <input type="email" id="login-email" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Пароль</label>
+                    <input type="password" id="login-password" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-sm mt-2">
+                    Войти
+                </button>
+            </form>
+
+            <!-- Разделитель -->
+            <div class="relative my-5">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-medium">или войти через</span></div>
+            </div>
+
+            <!-- Кнопки Социальных Сетей -->
+            <div class="space-y-2.5 w-full flex flex-col">
+                <!-- Кнопка Google со стандартным цветным логотипом -->
+                <a href="/auth/google" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-2 rounded-lg text-sm transition shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.08 3.67-5.14 3.67-8.46z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.21v3.11C3.18 21.88 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.6H1.21C.44 8.13 0 9.89 0 11.72s.44 3.59 1.21 5.12l4.06-3.11z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.49l4.06 3.11c.95-2.85 3.6-4.96 6.73-4.96z"/>
+                    </svg>
+                    Google
+                </a>
+                
+                <a href="/auth/github" class="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- Окно Регистрации (Register Modal) -->
+    <div id="register-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 relative">
+            <button onclick="toggleModal('register-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">&times;</button>
+            <h3 class="text-xl font-bold text-slate-900 mb-4">Создать аккаунт</h3>
+            <form onsubmit="handleRegister(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Полное имя (ФИО)</label>
+                    <input type="text" id="reg-name" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Email</label>
+                    <input type="email" id="reg-email" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Пароль</label>
+                    <input type="password" id="reg-password" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">Зарегистрироваться</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Скрипты взаимодействия с API -->
+    <script>
+        // Функция открытия/закрытия модалок
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        // Логика проверки состояния сессии при загрузке страницы
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const token = localStorage.getItem('accessToken');
+
+            if (user && token) {
+                // Прячем дефолтные кнопки входа
+                document.getElementById('btn-nav-login').classList.add('hidden');
+                document.getElementById('btn-nav-register').classList.add('hidden');
+                
+                // Показываем блок пользователя
+                document.getElementById('user-profile-info').classList.remove('hidden');
+                document.getElementById('nav-user-name').innerText = user.fullName;
+                document.getElementById('nav-user-role').innerText = user.role;
+
+                // Если роль ADMIN — открываем панель добавления книг
+                if (user.role === 'ADMIN') {
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                }
+            }
+        });
+
+        // Функция Входа (Login)
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch('/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const res = await response.json();
+
+                if (response.ok && res.success) {
+                    // Сохраняем токен и профиль в браузер
+                    localStorage.setItem('accessToken', res.data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(res.data.user));
+                    alert('Успешный вход в систему!');
+                    location.reload();
+                } else {
+                    alert('Ошибка авторизации: ' + (res.message || 'Проверьте данные'));
+                }
+            } catch (err) {
+                alert('Сетевая ошибка сервера.');
+            }
+        }
+
+        // Функция Регистрации (Register)
+        async function handleRegister(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, email, password })
+                });
+                const res = await response.json();
+
+                if (response.ok) {
+                    alert('Регистрация прошла успешно! Проверьте почту для активации.');
+                    toggleModal('register-modal');
+                    toggleModal('login-modal');
+                } else {
+                    alert('Ошибка регистрации: ' + (res.message || 'Неверный формат данных'));
+                }
+            } catch (err) {
+                alert('Сетевая ошибка.');
+            }
+        }
+
+        // Функция Выхода (Logout)
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        // Добавление Книги Администратором (Admin: Add Book)
+        async function handleAddBook(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('accessToken');
+            
+            const title = document.getElementById('add-title').value;
+            const author = document.getElementById('add-author').value;
+            const isbn = document.getElementById('add-isbn').value;
+            const publishedYear = parseInt(document.getElementById('add-year').value, 10);
+            const availableCopies = parseInt(document.getElementById('add-copies').value, 10);
+
+            try {
+                const response = await fetch('/books', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, author, isbn, publishedYear, availableCopies })
+                });
+                const res = await response.json();
+
+                if (response.ok) {
+                    alert('Книга успешно добавлена в каталог!');
+                    location.reload();
+                } else {
+                    alert('Доступ запрещен или ошибка валидации: ' + res.message);
+                }
+            } catch (err) {
+                alert('Ошибка отправки данных.');
+            }
+        }
+
+        // Аренда книги (Borrow Book)
+        async function borrowBook(bookId) {
+            const token = localStorage.getItem('accessToken');
+            
+            if (!token) {
+                alert('Пожалуйста, авторизуйтесь (кнопка Войти), чтобы взять книгу!');
+                toggleModal('login-modal');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/borrow/${bookId}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    alert('Книга успешно забронирована и выдана вам!');
+                    location.reload();
+                } else {
+                    alert('Не удалось взять книгу: ' + (result.message || 'Нет свободных копий'));
+                }
+            } catch (err) {
+                alert('Ошибка соединения.');
+            }
+        }
+    </script>
+</body>
+</html>
