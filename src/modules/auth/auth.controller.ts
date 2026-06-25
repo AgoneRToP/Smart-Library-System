@@ -50,6 +50,19 @@ export class AuthController {
     await this.service.login(payload, res);
   }
 
+  @Post('/verify-login-pin')
+  async verifyLoginPin(
+    @Body() body: { email: string; pin: string },
+    @Res() res: Response,
+  ) {
+    return this.service.verifyLoginPin(body, res);
+  }
+
+  @Post('/resend-login-pin')
+  async resendLoginPin(@Body() body: { email: string }) {
+    return this.service.resendLoginPin(body.email);
+  }
+
   @Protected(false)
   @Post('/register')
   @HttpCode(HttpStatus.OK)
@@ -90,7 +103,7 @@ export class AuthController {
   async googleCallback(@Req() req: any, @Res() res: Response) {
     const response = await this.service.googleAuth(req.user);
 
-    res.redirect('/');
+    return this.service.handleOAuthSuccess(response, res);
   }
 
   @UseGuards(GithubAuthGuard)
@@ -102,6 +115,6 @@ export class AuthController {
   async githubCallback(@Req() req: any, @Res() res: Response) {
     const response = await this.service.githubAuth(req.user);
 
-    res.redirect('/');
+    return this.service.handleOAuthSuccess(response, res);
   }
 }

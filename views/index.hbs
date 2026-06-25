@@ -8,114 +8,101 @@
 </head>
 <body class="bg-slate-50 font-sans text-slate-800">
 
-    <!-- Навигационная панель -->
-    <nav class="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <span class="text-2xl">📚</span>
-                <a href="/" class="font-bold text-xl tracking-tight text-indigo-600">SmartLibrary</a>
-            </div>
-            
-            <!-- Блок профиля и авторизации -->
-            <div id="auth-nav-block" class="flex items-center space-x-4">
-                <!-- Кнопки для неавторизованных пользователей -->
-                <button onclick="toggleModal('login-modal')" id="btn-nav-login" class="text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Войти</button>
-                <button onclick="toggleModal('register-modal')" id="btn-nav-register" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition shadow-sm">Регистрация</button>
-                
-                <!-- Блок для авторизованных (скрыт по дефолту) -->
-                <div id="user-profile-info" class="hidden flex items-center space-x-3">
-                    <span id="nav-user-name" class="text-sm font-semibold text-slate-700"></span>
-                    <span id="nav-user-role" class="text-xs bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full font-medium"></span>
-                    <button onclick="logout()" class="text-sm font-medium text-rose-600 hover:text-rose-700 transition">Выйти</button>
-                </div>
-            </div>
-        </div>
-    </nav>
+    <!-- Подключаем шапку сайта -->
+    {{> navbar}}
 
-    <!-- Главный контент -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
-        <!-- Панель Администратора: Добавление книг (скрыта по дефолту) -->
-        <section id="admin-panel" class="hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-10">
-            <div class="border-b border-slate-100 pb-4 mb-6">
-                <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">🛠️ Панель управления: Добавить книгу</h2>
-                <p class="text-slate-500 text-sm mt-0.5">Добавление новых экземпляров в единую базу данных MongoDB.</p>
-            </div>
-            <form id="add-book-form" onsubmit="handleAddBook(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Название книги</label>
-                    <input type="text" id="add-title" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Автор</label>
-                    <input type="text" id="add-author" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">ISBN код</label>
-                    <input type="text" id="add-isbn" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Год</label>
-                        <input type="number" id="add-year" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Копии</label>
-                        <input type="number" id="add-copies" min="1" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 text-sm focus:outline-none">
-                    </div>
-                </div>
-                <div>
-                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">Сохранить книгу</button>
-                </div>
-            </form>
-        </section>
+        <!-- Подключаем админку -->
+        {{> admin}}
+        {{> admin-users}}
+        {{> admin-requests}}
 
-        <!-- Заголовок секции каталога -->
-        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <!-- Заголовок каталога -->
+        <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 border border-slate-200 rounded-2xl shadow-sm">
             <div>
                 <h1 class="text-3xl font-bold tracking-tight text-slate-900">Каталог цифровой библиотеки</h1>
-                <p class="text-slate-500 mt-1">Доступные книги и управление бронированием в реальном времени с кэшем Redis.</p>
+                <p class="text-slate-500 mt-1">Доступные экземпляры и управление бронированием в реальном времени с кэшем Redis.</p>
             </div>
-            <form action="/" method="GET" class="flex gap-2">
-                <input type="text" name="search" placeholder="Поиск по названию..." class="w-64 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Найти</button>
-            </form>
+            
+            <!-- ПОКАЗАТЕЛЬ ОБЩЕГО КОЛИЧЕСТВА КНИГ -->
+            <div class="flex items-center gap-3 bg-indigo-50 text-indigo-700 px-5 py-3 rounded-xl border border-indigo-100">
+                <span class="text-3xl">📊</span>
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-indigo-400 block leading-none">Всего в фонде</span>
+                    <span class="text-2xl font-black leading-none mt-1 block"><span id="total-books-count">{{books.length}}</span> книг</span>
+                </div>
+            </div>
         </div>
 
         <!-- Сетка книг -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {{#each books}}
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition duration-200">
+
+            <div data-id="{{this._id}}" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition duration-200">
+
+                <!-- Блок обложки книги -->
                 <div class="aspect-[3/4] bg-slate-100 relative overflow-hidden group">
-                    {{#if this.coverImage}}
-                        <img src="/uploads/books/{{this.coverImage}}" alt="{{this.title}}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                    {{else}}
-                        <div class="w-full h-full flex flex-col items-center justify-center text-slate-400 p-4 text-center">
-                            <span class="text-4xl mb-2">📖</span>
-                            <span class="text-xs font-medium">Нет обложки</span>
-                        </div>
-                    {{/if}}
+                    <img id="img-{{this._id}}" 
+                         alt="{{this.title}}" 
+                         class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+
+                    <script>
+                        (function() {
+                            const rawCover = "{{this.coverImage}}";
+                            const imgElement = document.getElementById("img-{{this._id}}");
+                            if (!rawCover || rawCover === 'undefined' || rawCover === 'null' || rawCover === '') {
+                                imgElement.src = "/uploads/books/default-cover.jpg";
+                            } else {
+                                imgElement.src = "/uploads/books/" + rawCover;
+                            }
+                            imgElement.onerror = function() {
+                                this.onerror = null;
+                                this.src = "/uploads/books/default-cover.jpg";
+                            };
+                        })();
+                    </script>
                 </div>
+
+                <!-- Блок текстового описания и кнопок -->
                 <div class="p-5 flex-1 flex flex-col justify-between">
                     <div>
                         <span class="text-xs font-semibold tracking-wider text-slate-400 uppercase block mb-1">ISBN: {{this.isbn}}</span>
                         <h3 class="font-bold text-slate-900 text-lg leading-snug line-clamp-2 mb-1">{{this.title}}</h3>
                         <p class="text-slate-600 text-sm mb-2">Автор: <span class="font-medium">{{this.author}}</span></p>
-                        <p class="text-slate-400 text-xs mb-4">Год издания: {{this.publishedYear}}</p>
+                        <p class="text-slate-400 text-xs mb-4">Год: {{this.publishedYear}}</p>
                     </div>
-                    <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <div>
-                            <span class="text-xs text-slate-400 block">В наличии:</span>
-                            <span class="text-sm font-bold {{#if this.availableCopies}}text-emerald-600{{else}}text-rose-500{{/if}}">{{this.availableCopies}} шт.</span>
+
+                    <div class="pt-4 border-t border-slate-100 flex flex-col gap-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div>
+                                <span class="text-xs text-slate-400 block">В наличии:</span>
+                                <span class="text-sm font-bold {{#if this.availableCopies}}text-emerald-600{{else}}text-rose-500{{/if}}">{{this.availableCopies}} шт.</span>
+                            </div>
+                            {{#if this.availableCopies}}
+                                <button onclick="openBorrowModal('{{this._id}}', '{{this.title}}', '{{this.author}}')" 
+                                        class="btn-borrow-book bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">
+                                    Взять читать
+                                </button>
+                            {{else}}
+                                <button disabled class="bg-slate-100 text-slate-400 text-xs font-semibold px-4 py-2 rounded-md cursor-not-allowed">Нет на месте</button>
+                            {{/if}}
                         </div>
-                        {{#if this.availableCopies}}
-                            <button onclick="borrowBook('{{this._id}}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-md shadow-sm transition">Взять читать</button>
-                        {{else}}
-                            <button disabled class="bg-slate-100 text-slate-400 text-xs font-semibold px-4 py-2 rounded-md cursor-not-allowed">Нет на месте</button>
-                        {{/if}}
-                    </div>
-                </div>
-            </div>
+
+                        <!-- Изолированные кнопки действий админа (скрыты по дефолту) -->
+                        <div class="admin-actions hidden border-t border-dashed border-slate-100 pt-2 flex flex-col gap-2">
+                            <input type="file" id="file-input-{{this._id}}" onchange="uploadBookCover('{{this._id}}')" class="hidden" accept="image/*">
+                            <button onclick="document.getElementById('file-input-{{this._id}}').click()" class="w-full text-center text-[11px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold py-1.5 rounded-md transition">📸 Загрузить обложку</button>
+                            <div class="flex gap-2 justify-end">
+                                <button onclick="openEditBookModal('{{this._id}}', '{{this.title}}', '{{this.author}}', '{{this.publishedYear}}', '{{this.availableCopies}}')" class="text-[11px] bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold px-2.5 py-1 rounded-md transition">✏️ Ред.</button>
+                                <button onclick="deleteBook('{{this._id}}')" class="text-[11px] bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-2.5 py-1 rounded-md transition">❌ Уд.</button>
+                            </div>
+                        </div>
+                    </div> <!-- /pt-4 -->
+                </div> <!-- /p-5 -->
+
+            </div> <!-- /Главный контейнер карточки (БЫЛ ПРОПУЩЕН ТУТ) -->
+
             {{else}}
             <div class="col-span-full bg-white border border-dashed border-slate-300 rounded-xl p-12 text-center">
                 <span class="text-5xl block mb-4">🔍</span>
@@ -125,113 +112,120 @@
         </div>
     </main>
 
-    <!-- Окно Авторизации (Login Modal) -->
-    <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 relative mx-4">
-            <!-- Кнопка закрытия окна -->
-            <button onclick="toggleModal('login-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-semibold focus:outline-none">&times;</button>
-            
-            <h3 class="text-xl font-bold text-slate-900 mb-5 text-center">Вход в систему</h3>
-            
-            <!-- Стандартная форма входа -->
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Email</label>
-                    <input type="email" id="login-email" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Пароль</label>
-                    <input type="password" id="login-password" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-sm mt-2">
-                    Войти
-                </button>
-            </form>
+    <!-- Подключаем все три всплывающих окна безопасности -->
+    {{> modal-login}}
+    {{> modal-pin}}
+    {{> modal-reg}}
+    {{> modal-edit-book}}
+    {{> modal-borrow}}
+    {{> modal-search}}
 
-            <!-- Разделитель -->
-            <div class="relative my-5">
-                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-                <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-400 font-medium">или войти через</span></div>
-            </div>
-
-            <!-- Кнопки Социальных Сетей -->
-            <div class="space-y-2.5 w-full flex flex-col">
-                <!-- Кнопка Google со стандартным цветным логотипом -->
-                <a href="/auth/google" class="w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-2 rounded-lg text-sm transition shadow-sm">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.08 3.67-5.14 3.67-8.46z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.21v3.11C3.18 21.88 7.31 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.6H1.21C.44 8.13 0 9.89 0 11.72s.44 3.59 1.21 5.12l4.06-3.11z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.49l4.06 3.11c.95-2.85 3.6-4.96 6.73-4.96z"/>
-                    </svg>
-                    Google
-                </a>
-                
-                <a href="/auth/github" class="w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">
-                    <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="currentColor" d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    GitHub
-                </a>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- Окно Регистрации (Register Modal) -->
-    <div id="register-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 relative">
-            <button onclick="toggleModal('register-modal')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-            <h3 class="text-xl font-bold text-slate-900 mb-4">Создать аккаунт</h3>
-            <form onsubmit="handleRegister(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Полное имя (ФИО)</label>
-                    <input type="text" id="reg-name" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Email</label>
-                    <input type="email" id="reg-email" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Пароль</label>
-                    <input type="password" id="reg-password" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                </div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm">Зарегистрироваться</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- Скрипты взаимодействия с API -->
+    <!-- ЕДИНЫЙ СКРИПТ API -->
     <script>
-        // Функция открытия/закрытия модалок
+        const SERVER_BOOKS_DATA = {{{json books}}};
+        
+        let globalAuthEmail = '';
+        let countdownInterval;
+
+
         function toggleModal(id) {
             const modal = document.getElementById(id);
-            modal.classList.toggle('hidden');
-        }
-
-        // Логика проверки состояния сессии при загрузке страницы
-        document.addEventListener("DOMContentLoaded", () => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const token = localStorage.getItem('accessToken');
-
-            if (user && token) {
-                // Прячем дефолтные кнопки входа
-                document.getElementById('btn-nav-login').classList.add('hidden');
-                document.getElementById('btn-nav-register').classList.add('hidden');
-                
-                // Показываем блок пользователя
-                document.getElementById('user-profile-info').classList.remove('hidden');
-                document.getElementById('nav-user-name').innerText = user.fullName;
-                document.getElementById('nav-user-role').innerText = user.role;
-
-                // Если роль ADMIN — открываем панель добавления книг
-                if (user.role === 'ADMIN') {
-                    document.getElementById('admin-panel').classList.remove('hidden');
+            if (modal) {
+                if (modal.classList.contains('hidden')) {
+                    modal.classList.remove('hidden');
+                    modal.style.display = 'flex';
+                } else {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
                 }
             }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlToken = urlParams.get('token');
+            const urlUserRaw = urlParams.get('user');
+
+            if (urlToken && urlUserRaw) {
+                try {
+                    const decodedUser = JSON.parse(atob(urlUserRaw));
+                    localStorage.setItem('accessToken', urlToken);
+                    localStorage.setItem('user', JSON.stringify(decodedUser));
+                } catch (e) {
+                    console.error('Ошибка сессии OAuth', e);
+                }
+                window.history.replaceState({}, document.title, "/");
+            }
+            updateAuthUI();
         });
 
-        // Функция Входа (Login)
-        async function handleLogin(e) {
+        function updateAuthUI() {
+            const token = localStorage.getItem('accessToken');
+            const userRaw = localStorage.getItem('user');
+
+            const btnLogin = document.getElementById('btn-nav-login');
+            const btnRegister = document.getElementById('btn-nav-register');
+            const userProfileBlock = document.getElementById('user-profile-info');
+            const navUserName = document.getElementById('nav-user-name');
+            const navUserRole = document.getElementById('nav-user-role');
+            
+            const adminNavButtons = document.getElementById('admin-nav-buttons'); // Контейнер кнопок в navbar
+
+            if (token && userRaw) {
+                const user = JSON.parse(userRaw);
+                if (btnLogin) btnLogin.style.display = 'none';
+                if (btnRegister) btnRegister.style.display = 'none';
+                if (userProfileBlock) userProfileBlock.classList.remove('hidden');
+                if (navUserName) navUserName.innerText = user.fullName || user.email;
+                if (navUserRole) navUserRole.innerText = user.role;
+                
+                // ЕСЛИ ВОШЕЛ АДМИН: Показываем три аккуратные кнопки в шапке сайта
+                if (user.role === 'ADMIN') {
+                    if (adminNavButtons) {
+                        adminNavButtons.classList.remove('hidden');
+                        adminNavButtons.style.display = 'flex';
+                    }
+                    loadAdminUsers();
+                    loadAdminRequests();
+                    document.querySelectorAll('.admin-actions').forEach(el => el.classList.remove('hidden'));
+
+                    // КРИТИЧНО: Находим все кнопки "Взять читать" и скрываем их от админа!
+                    document.querySelectorAll('.btn-borrow-book').forEach(el => el.style.display = 'none');
+                }
+            } else {
+                if (btnLogin) btnLogin.style.display = 'block';
+                if (btnRegister) btnRegister.style.display = 'block';
+                if (userProfileBlock) userProfileBlock.classList.add('hidden');
+                if (adminNavButtons) adminNavButtons.style.display = 'none';
+            }
+        }
+
+        function startResendTimer() {
+            const btnResend = document.getElementById('btn-resend-pin');
+            const timerText = document.getElementById('resend-timer-text');
+            const timerSeconds = document.getElementById('timer-seconds');
+            let timeLeft = 60;
+            clearInterval(countdownInterval);
+            btnResend.disabled = true;
+            btnResend.classList.remove('text-indigo-600', 'cursor-pointer');
+            btnResend.classList.add('text-slate-400', 'cursor-not-allowed');
+            if (timerText) timerText.style.display = 'block';
+            if (timerSeconds) timerSeconds.innerText = timeLeft;
+
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timerSeconds) timerSeconds.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    btnResend.disabled = false;
+                    btnResend.classList.remove('text-slate-400', 'cursor-not-allowed');
+                    btnResend.classList.add('text-indigo-600', 'cursor-pointer');
+                    if (timerText) timerText.style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        async function handleLoginStepOne(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -244,27 +238,71 @@
                 });
                 const res = await response.json();
 
-                if (response.ok && res.success) {
-                    // Сохраняем токен и профиль в браузер
-                    localStorage.setItem('accessToken', res.data.accessToken);
-                    localStorage.setItem('user', JSON.stringify(res.data.user));
-                    alert('Успешный вход в систему!');
-                    location.reload();
+                if (response.ok && res.requiresPin) {
+                    globalAuthEmail = res.email;
+                    toggleModal('login-modal');
+                    toggleModal('pin-auth-modal');
+                    startResendTimer();
                 } else {
-                    alert('Ошибка авторизации: ' + (res.message || 'Проверьте данные'));
+                    alert('Ошибка: ' + (res.message || 'Неверный логин или пароль'));
                 }
             } catch (err) {
                 alert('Сетевая ошибка сервера.');
             }
         }
 
-        // Функция Регистрации (Register)
+        async function handleVerifyPinStepTwo(e) {
+            e.preventDefault();
+            const pinCodeValue = document.getElementById('login-pin-input').value;
+
+            try {
+                const response = await fetch('/auth/verify-login-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: globalAuthEmail, pin: pinCodeValue })
+                });
+                const res = await response.json();
+
+                if (response.ok && (res.success || (res.data && res.data.accessToken))) {
+                    const data = res.data || res;
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    alert('Вход успешно выполнен!');
+                    toggleModal('pin-auth-modal');
+                    updateAuthUI();
+                    location.reload();
+                } else {
+                    alert('Ошибка: ' + (res.message || 'Неверный ПИН-код'));
+                }
+            } catch (err) {
+                alert('Ошибка отправки ПИН-кода.');
+            }
+        }
+
+        async function handleResendPin() {
+            try {
+                const response = await fetch('/auth/resend-login-pin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: globalAuthEmail })
+                });
+                const res = await response.json();
+                if (response.ok && res.success) {
+                    alert(res.message);
+                    startResendTimer();
+                } else {
+                    alert('Ошибка: ' + res.message);
+                }
+            } catch (err) {
+                alert('Ошибка сети.');
+            }
+        }
+
         async function handleRegister(e) {
             e.preventDefault();
             const fullName = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
-
             try {
                 const response = await fetch('/auth/register', {
                     method: 'POST',
@@ -272,30 +310,26 @@
                     body: JSON.stringify({ fullName, email, password })
                 });
                 const res = await response.json();
-
                 if (response.ok) {
-                    alert('Регистрация прошла успешно! Проверьте почту для активации.');
+                    alert('Успешно! Проверьте почту для активации.');
                     toggleModal('register-modal');
                     toggleModal('login-modal');
                 } else {
-                    alert('Ошибка регистрации: ' + (res.message || 'Неверный формат данных'));
+                    alert('Ошибка: ' + res.message);
                 }
             } catch (err) {
-                alert('Сетевая ошибка.');
+                alert('Ошибка сети.');
             }
         }
 
-        // Функция Выхода (Logout)
         function logout() {
             localStorage.clear();
             location.reload();
         }
 
-        // Добавление Книги Администратором (Admin: Add Book)
         async function handleAddBook(e) {
             e.preventDefault();
             const token = localStorage.getItem('accessToken');
-            
             const title = document.getElementById('add-title').value;
             const author = document.getElementById('add-author').value;
             const isbn = document.getElementById('add-isbn').value;
@@ -312,24 +346,21 @@
                     body: JSON.stringify({ title, author, isbn, publishedYear, availableCopies })
                 });
                 const res = await response.json();
-
                 if (response.ok) {
-                    alert('Книга успешно добавлена в каталог!');
+                    alert('Книга успешно добавлена!');
                     location.reload();
                 } else {
-                    alert('Доступ запрещен или ошибка валидации: ' + res.message);
+                    alert('Ошибка: ' + res.message);
                 }
             } catch (err) {
-                alert('Ошибка отправки данных.');
+                alert('Ошибка сети.');
             }
         }
 
-        // Аренда книги (Borrow Book)
         async function borrowBook(bookId) {
             const token = localStorage.getItem('accessToken');
-            
             if (!token) {
-                alert('Пожалуйста, авторизуйтесь (кнопка Войти), чтобы взять книгу!');
+                alert('Пожалуйста, воспользуйтесь авторизацией, чтобы взять книгу.');
                 toggleModal('login-modal');
                 return;
             }
@@ -337,20 +368,524 @@
             try {
                 const response = await fetch(`/borrow/${bookId}`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
-                const result = await response.json();
-                
-                if (response.ok && result.success) {
-                    alert('Книга успешно забронирована и выдана вам!');
+                const res = await response.json();
+                if (response.ok) {
+                    alert('Книга успешно забронирована!');
                     location.reload();
                 } else {
-                    alert('Не удалось взять книгу: ' + (result.message || 'Нет свободных копий'));
+                    alert('Ошибка: ' + res.message);
                 }
             } catch (err) {
-                alert('Ошибка соединения.');
+                alert('Ошибка сети.');
             }
         }
+
+        // --- НОВЫЕ АДМИНИСТРАТИВНЫЕ ФУНКЦИИ ---
+
+        // 1. Удаление книги (Delete Book)
+        async function deleteBook(bookId) {
+            if (!confirm('Вы уверены, что хотите навсегда удалить эту книгу из базы данных?')) return;
+            const token = localStorage.getItem('accessToken');
+            
+            try {
+                const response = await fetch(`/books/${bookId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    alert('Книга успешно удалена!');
+                    location.reload();
+                } else {
+                    alert('Ошибка удаления книги.');
+                }
+            } catch (e) { alert('Ошибка сети.'); }
+        }
+
+        // 2. Открытие модалки редактирования и заполнение полей данными книги
+        function openEditBookModal(id, title, author, year, copies) {
+            document.getElementById('edit-book-id').value = id;
+            document.getElementById('edit-title').value = title;
+            document.getElementById('edit-author').value = author;
+            document.getElementById('edit-year').value = year;
+            document.getElementById('edit-copies').value = copies;
+            toggleModal('edit-book-modal');
+        }
+
+        // 3. Отправка обновленных данных книги на бэкенд (Update Book)
+        async function handleUpdateBook(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('accessToken');
+            const id = document.getElementById('edit-book-id').value;
+            
+            const title = document.getElementById('edit-title').value;
+            const author = document.getElementById('edit-author').value;
+            const publishedYear = parseInt(document.getElementById('edit-year').value, 10);
+            const availableCopies = parseInt(document.getElementById('edit-copies').value, 10);
+
+            try {
+                const response = await fetch(`/books/${id}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ title, author, publishedYear, availableCopies })
+                });
+                if (response.ok) {
+                    alert('Данные книги успешно обновлены!');
+                    location.reload();
+                } else {
+                    alert('Не удалось обновить книгу.');
+                }
+            } catch (e) { alert('Ошибка сети.'); }
+        }
+
+        // 4. Загрузка списка всех пользователей из базы данных (Admin: View all users)
+        async function loadAdminUsers() {
+            const token = localStorage.getItem('accessToken');
+            try {
+                const response = await fetch('/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const res = await response.json();
+                
+                // Автоматическая подстраховка для массива юзеров
+                let users = [];
+                if (Array.isArray(res)) {
+                    users = res;
+                } else if (res && res.data && Array.isArray(res.data)) {
+                    users = res.data;
+                } else if (res && res.data && res.data.data && Array.isArray(res.data.data)) {
+                    users = res.data.data;
+                }
+                
+                const tbody = document.getElementById('admin-users-table-body');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                if (!users || users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Пользователи отсутствуют</td></tr>`;
+                    return;
+                }
+
+                users.forEach(u => {
+                    const statusBadge = u.isActive 
+                        ? `<span class="text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Активен</span>`
+                        : `<span class="text-xs bg-rose-50 text-rose-700 px-2 py-0.5 rounded-full font-medium">Заблокирован</span>`;
+                        
+                    const actionButton = u.isActive
+                        ? `<button onclick="toggleUserBlock('${u._id}', false)" class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 px-2.5 py-1 rounded-md font-medium mr-2 transition">🚫 Блок</button>`
+                        : `<button onclick="toggleUserBlock('${u._id}', true)" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md font-medium mr-2 transition">🔓 Разблок</button>`;
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50">
+                            <td class="px-4 py-3 font-semibold text-slate-800">${u.fullName}</td>
+                            <td class="px-4 py-3">${u.email}</td>
+                            <td class="px-4 py-3 text-xs font-mono">${u.role}</td>
+                            <td class="px-4 py-3">${statusBadge}</td>
+                            <td class="px-4 py-3 text-right">
+                                ${u.role !== 'ADMIN' ? actionButton + `<button onclick="deleteUser('${u._id}')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md font-medium transition">❌ Удалить</button>` : '<span class="text-xs text-slate-400">Системный</span>'}
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { 
+                    console.error('Критическая ошибка loadAdminUsers:', e);
+                    document.getElementById('admin-users-table-body').innerHTML = 
+                        `<tr><td colspan="5" class="text-center py-4 text-rose-500 font-medium">❌ Ошибка сервера при загрузке пользователей: ${e.message}</td></tr>`;
+                }
+        }
+
+        // 5. Блокировка/Разблокировка пользователя (Admin: Block user)
+        async function toggleUserBlock(userId, setActivate) {
+            const token = localStorage.getItem('accessToken');
+            try {
+                const response = await fetch(`/users/${userId}/status`, { // Измените на ваш эндпоинт изменения статуса
+                    method: 'PATCH',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ isActive: setActivate })
+                });
+                if (response.ok) {
+                    loadAdminUsers(); // Перерисовываем таблицу
+                } else { alert('Не удалось изменить статус пользователя.'); }
+            } catch (e) { alert('Ошибка сети.'); }
+        }
+
+        // 6. Полное удаление пользователя (Admin: Delete user)
+        async function deleteUser(userId) {
+            if (!confirm('Вы уверены, что хотите навсегда удалить этого пользователя?')) return;
+            const token = localStorage.getItem('accessToken');
+            try {
+                const response = await fetch(`/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    alert('Пользователь успешно удален.');
+                    loadAdminUsers();
+                } else { alert('Ошибка при удалении пользователя.'); }
+            } catch (e) { alert('Ошибка сети.'); }
+        }
+
+        async function uploadBookCover(bookId) {
+            const fileInput = document.getElementById(`file-input-${bookId}`);
+            if (!fileInput || fileInput.files.length === 0) return;
+
+            const file = fileInput.files[0];
+            const token = localStorage.getItem('accessToken');
+
+            // Упаковываем файл в формат multipart/form-data
+            const formData = new FormData();
+            formData.append('file', file); // Ключ 'file' должен строго совпадать с FileInterceptor('file') на бэкенде!
+
+            try {
+                const response = await fetch(`/books/${bookId}/upload-cover`, {
+                    method: 'POST',
+                    headers: {
+                        // Внимание: При отправке FormData заголовок Content-Type указывать НЕ НАДО, 
+                        // браузер подставит его и сгенерирует multipart-границы (boundary) автоматически!
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const res = await response.json();
+
+                if (response.ok) {
+                    alert('Обложка книги успешно загружена и обновлена! 📸');
+                    location.reload(); // Перезагружаем страницу, чтобы увидеть новую обложку
+                } else {
+                    alert('Ошибка загрузки: ' + (res.message || 'Доступ запрещен или неверный формат картинки'));
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Ошибка сети при загрузке файла.');
+            }
+        }
+
+        // --- ЛОГИКА ЗАПРОСОВ АРЕНДЫ (2FA BORROW) ---
+
+        // 1. Отправка запроса пользователем
+        async function borrowBookRequest(bookId) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('Пожалуйста, авторизуйтесь, чтобы забронировать книгу!');
+                toggleModal('login-modal');
+                return;
+            }
+
+            const datePicker = document.getElementById(`date-picker-${bookId}`);
+            if (!datePicker || !datePicker.value) {
+                alert('Пожалуйста, выберите желаемую дату возврата книги!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/borrow/${bookId}`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ returnDate: datePicker.value })
+                });
+                const res = await response.json();
+
+                if (response.ok) {
+                    alert('Ваш запрос на аренду успешно отправлен! Админ проверит его в панели управления. 📨');
+                    toggleModal('borrow-modal');
+                    location.reload();
+                } else {
+                    alert('Ошибка аренды: ' + (res.message || 'Не удалось отправить запрос.'));
+                }
+            } catch (e) { alert('Ошибка сети.'); }
+        }
+
+        // 2. Загрузка заявок в таблицу админа
+        async function loadAdminRequests() {
+            const token = localStorage.getItem('accessToken');
+            try {
+                const response = await fetch('/borrow/requests', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const res = await response.json();
+                
+                let requests = [];
+                if (Array.isArray(res)) {
+                    requests = res;
+                } else if (res && res.data && Array.isArray(res.data)) {
+                    requests = res.data;
+                } else if (res && res.data && res.data.data && Array.isArray(res.data.data)) {
+                    requests = res.data.data;
+                } else {
+                    console.error('Сервер прислал не массив! Вот что пришло:', res);
+                }
+
+                const tbody = document.getElementById('admin-requests-table-body');
+                if (!tbody) return;
+
+                tbody.innerHTML = '';
+                
+                if (!requests || requests.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-400">Новых запросов нет</td></tr>`;
+                    return;
+                }
+
+                requests.forEach(r => {
+                    const formattedDate = new Date(r.returnDate).toLocaleDateString('ru-RU');
+                    
+                    let statusBadge = '';
+                    let actionButtons = '';
+
+                    if (r.status === 'PENDING') {
+                        statusBadge = `<span class="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full font-medium animate-pulse">Ожидает</span>`;
+                        actionButtons = `
+                            <button onclick="handleRequestAction('${r._id}', 'approve')" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-md font-medium mr-1.5 transition">✅ Принять заявку</button>
+                            <button onclick="handleRequestAction('${r._id}', 'reject')" class="text-xs bg-rose-50 hover:bg-rose-100 text-rose-600 px-2.5 py-1 rounded-md font-medium transition">❌ Отклонить</button>
+                        `;
+                    } else if (r.status === 'APPROVED') {
+                        statusBadge = `<span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-medium">На руках</span>`;
+                        actionButtons = `
+                            <button onclick="handleRequestAction('${r._id}', 'return')" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md font-bold transition border border-emerald-200">↩️ Принять возврат</button>
+                        `;
+                    } else if (r.status === 'RETURNED') {
+                        statusBadge = `<span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-medium">✓ Возвращена</span>`;
+                        actionButtons = `<span class="text-xs text-slate-400 font-mono">${new Date(r.returnedAt).toLocaleDateString('ru-RU')}</span>`;
+                    } else {
+                        statusBadge = `<span class="text-xs bg-slate-100 text-slate-400 line-through px-2 py-0.5 rounded-full">Отклонена</span>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="border-b border-slate-100 hover:bg-slate-50/50">
+                            <td class="px-4 py-3 font-medium text-slate-800">${r.userId?.fullName || 'Удален'} <br><span class="text-xs text-slate-400">${r.userId?.email || ''}</span></td>
+                            <td class="px-4 py-3 text-slate-700 font-semibold">${r.bookId?.title || 'Удаленная книга'}</td>
+                            <td class="px-4 py-3 font-mono text-slate-600">${formattedDate}</td>
+                            <td class="px-4 py-3">${statusBadge}</td>
+                            <td class="px-4 py-3 text-right">${actionButtons}</td>
+                        </tr>
+                    `;
+                });
+            } catch (e) { 
+                console.error('Критическая ошибка loadAdminRequests:', e);
+                const tbody = document.getElementById('admin-requests-table-body');
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-rose-500 font-medium">❌ Ошибка сервера при загрузке заявок: ${e.message}</td></tr>`;
+                }
+            }
+        }
+
+
+        // 3. Обработка кнопок Принять / Отклонить
+        async function handleRequestAction(id, action) {
+            const token = localStorage.getItem('accessToken');
+            try {
+                const response = await fetch(`/borrow/${id}/${action}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    loadAdminRequests(); // Мгновенно обновляем таблицу заявок
+                } else {
+                    const res = await response.json();
+                    alert('Ошибка: ' + res.message);
+                }
+            } catch (e) { alert('Ошибка соединения.'); }
+        }
+
+        function openBorrowModal(bookId, title, author) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('Пожалуйста, авторизуйтесь, чтобы отправить запрос на аренду книги!');
+                toggleModal('login-modal');
+                return;
+            }
+
+            // Заполняем скрытое поле ID и текстовое описание в окне
+            document.getElementById('borrow-modal-book-id').value = bookId;
+            document.getElementById('borrow-modal-book-title').innerText = `«${title}» — ${author}`;
+            
+            // Устанавливаем минимальную дату в календаре (сегодняшний день), чтобы нельзя было выбрать прошлое
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('borrow-modal-date-picker').min = today;
+            document.getElementById('borrow-modal-date-picker').value = '';
+
+            // Открываем модальное окно
+            toggleModal('borrow-modal');
+        }
+
+        // 2. Функция отправки запроса из модального окна на бэкенд
+        async function handleSendBorrowRequest(e) {
+            e.preventDefault();
+            const token = localStorage.getItem('accessToken');
+            const bookId = document.getElementById('borrow-modal-book-id').value;
+            const returnDateValue = document.getElementById('borrow-modal-date-picker').value;
+
+            try {
+                const response = await fetch(`/borrow/${bookId}`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ returnDate: returnDateValue })
+                });
+                const res = await response.json();
+
+                if (response.ok) {
+                    alert('Ваш запрос на аренду успешно отправлен! Админ проверит его в панели управления. 📨');
+                    toggleModal('borrow-modal'); // Закрываем окно
+                    location.reload();
+                } else {
+                    alert('Ошибка отправки запроса: ' + (res.message || 'Не удалось создать заявку'));
+                }
+            } catch (err) {
+                alert('Ошибка сети при отправке запроса.');
+            }
+        }
+
+        function openSearchModal() {
+            toggleModal('search-modal');
+            const searchInput = document.getElementById('search-modal-input');
+            if (searchInput) {
+                searchInput.value = ''; // Очищаем поле при открытии
+                document.getElementById('search-results-container').innerHTML = 
+                    '<p class="text-center text-sm text-slate-400 py-6">Введите хотя бы 2 символа для начала поиска...</p>';
+                setTimeout(() => searchInput.focus(), 50);
+            }
+        }
+
+        // "Живой" поиск БЕЗ запросов к серверу — работает мгновенно и без ошибок!
+        function handleLiveSearch(query) {
+            const container = document.getElementById('search-results-container');
+            
+            if (!query || query.trim().length < 2) {
+                container.innerHTML = '<p class="text-center text-sm text-slate-400 py-6">Введите хотя бы 2 символа для начала поиска...</p>';
+                return;
+            }
+
+            const searchString = query.toLowerCase().trim();
+
+            // БЕРЕМ ДАННЫЕ НАПРЯМУЮ ИЗ ПЕРЕМЕННОЙ БЭКЕНДА — ОНИ ТАМ ЕСТЬ ВСЕГДА!
+            const allBooks = Array.isArray(SERVER_BOOKS_DATA) ? SERVER_BOOKS_DATA : [];
+
+            // Фильтруем массив книг по названию или автору
+            const filteredBooks = allBooks.filter(book => {
+                const title = (book.title || '').toLowerCase();
+                const author = (book.author || '').toLowerCase();
+                return title.includes(searchString) || author.includes(searchString);
+            });
+
+            container.innerHTML = '';
+
+            if (filteredBooks.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <span class="text-3xl block mb-2">🤷‍♂️</span>
+                        <p class="text-sm font-medium text-slate-600">Ничего не найдено</p>
+                    </div>`;
+                return;
+            }
+
+            const userRaw = localStorage.getItem('user');
+            const currentUser = userRaw ? JSON.parse(userRaw) : null;
+            const isAdmin = currentUser && currentUser.role === 'ADMIN';
+
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 14);
+            const defaultDateString = defaultDate.toISOString().split('T')[0];
+
+            filteredBooks.forEach(book => {
+                const availableCopies = parseInt(book.availableCopies, 10) || 0;
+                const statusColor = availableCopies > 0 ? 'text-emerald-600' : 'text-rose-500';
+                const coverSrc = book.coverImage ? `/uploads/books/${book.coverImage}` : '/uploads/books/default-cover.jpg';
+                
+                let actionHtml = '';
+
+                if (isAdmin) {
+                    actionHtml = `<span class="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-md font-bold border border-amber-200">Режим админа</span>`;
+                } else {
+                    if (availableCopies > 0) {
+                        actionHtml = `
+                            <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                                <div class="flex flex-col">
+                                    <label class="text-[10px] text-slate-400 font-semibold uppercase mb-0.5">Вернуть до:</label>
+                                    <input type="date" id="search-date-${book._id}" value="${defaultDateString}" min="${new Date().toISOString().split('T')[0]}"
+                                        class="px-2 py-1 border border-slate-300 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 bg-white text-slate-700 font-medium">
+                                </div>
+                                <button onclick="borrowBookFromSearch('${book._id}')" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition shadow-sm h-[30px] mt-auto">
+                                    Взять
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        actionHtml = `<button disabled class="bg-slate-100 text-slate-400 text-xs font-semibold px-3 py-1.5 rounded-lg cursor-not-allowed">Нет копий</button>`;
+                    }
+                }
+
+                container.innerHTML += `
+                    <div class="flex items-center gap-4 py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50/50 p-2 rounded-xl transition">
+                        <img src="${coverSrc}" class="w-12 h-16 object-cover rounded-md shadow-sm bg-slate-100 flex-shrink-0" onerror="this.src='/uploads/books/default-cover.jpg'">
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-slate-900 text-sm truncate mb-0.5">${book.title}</h4>
+                            <p class="text-slate-500 text-xs truncate">Автор: ${book.author}</p>
+                            <p class="text-[11px] text-slate-400 mt-1 flex items-center gap-2">
+                                <span>ISBN: ${book.isbn || 'N/A'}</span> • 
+                                <span class="font-semibold ${statusColor}">В наличии: ${availableCopies} шт.</span>
+                            </p>
+                        </div>
+                        <div class="flex-shrink-0">
+                            ${actionHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+                
+        async function borrowBookFromSearch(bookId) {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                alert('Пожалуйста, сначала войдите в свой аккаунт!');
+                toggleModal('search-modal');
+                toggleModal('login-modal');
+                return;
+            }
+
+            // Считываем выбранную пользователем дату возврата из календаря
+            const dateInput = document.getElementById(`search-date-${bookId}`);
+            const selectedReturnDate = dateInput ? dateInput.value : null;
+
+            try {
+                const response = await fetch(`/borrow/${bookId}`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    // Отправляем выбранную дату на бэкенд в формате JSON
+                    body: JSON.stringify({ returnDate: selectedReturnDate })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Книга успешно забронирована на выбранную вами дату! 📚');
+                    toggleModal('search-modal');
+                    location.reload();
+                } else {
+                    alert('Ошибка бронирования: ' + (result.message || 'Попробуйте позже'));
+                }
+            } catch (err) {
+                alert('Ошибка соединения с сервером.');
+            }
+        }
+
     </script>
 </body>
 </html>

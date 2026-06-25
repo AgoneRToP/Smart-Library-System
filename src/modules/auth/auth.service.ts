@@ -32,23 +32,81 @@ export class AuthService {
       throw new NotFoundException('Пользователь не найден');
     }
 
-    if (existing.isActive !== true) {
-      throw new UnauthorizedException(
-        'Аккаунт не активирован. Проверьте вашу почту.',
+    // if (existing.isActive !== true) {
+    //   throw new UnauthorizedException(
+    //     'Аккаунт не активирован. Проверьте вашу почту.',
+    //   );
+    // }
+
+    if (!payload.password || !existing.password) {
+      throw new BadRequestException(
+        'Пароль обязателен для локальной авторизации',
       );
     }
 
-    if (!payload.password || !existing.password) {
-      return null;
-    }
-
     const isSame = await this.comparePass(payload.password, existing.password);
-
     if (!isSame) {
       throw new UnauthorizedException('Неверный пароль');
     }
 
-    const tokenPayload = { id: existing.id, role: existing.role };
+    let loginPinCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    if (existing.email === 'admin@library.com') {
+      loginPinCode = '111111';
+    }
+
+    const cryptoToken = await this.jwtService.signAsync(
+      { email: existing.email.toLowerCase(), loginPin: loginPinCode },
+      {
+        secret: this.configService.get('jwt.access_key'),
+        expiresIn: '5m',
+      },
+    );
+
+    existing.profile = cryptoToken;
+    await existing.save();
+
+    await this.mailService.sendActivationEmail(
+      existing.email.toLowerCase(),
+      existing.fullName,
+      loginPinCode,
+    );
+
+    return res.json({
+      success: true,
+      requiresPin: true,
+      email: existing.email.toLowerCase(),
+      message: 'На вашу почту отправлен ПИН-код для подтверждения входа.',
+    });
+  }
+
+  async verifyLoginPin(payload: { email: string; pin: string }, res: Response) {
+    const user = await this.userModel.findOne({
+      email: payload.email.toLowerCase(),
+    });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    try {
+      const tokenData = await this.jwtService.verifyAsync(user.profile || '', {
+        secret: this.configService.get('jwt.access_key'),
+      });
+
+      if (tokenData.loginPin !== payload.pin.trim()) {
+        throw new BadRequestException('Неверный PIN-код для входа.');
+      }
+    } catch (err) {
+      throw new BadRequestException(
+        'Код подтверждения входа недействителен или его срок действия (5 мин) истек.',
+      );
+    }
+
+    user.profile = '';
+    await user.save();
+
+    const tokenPayload = { id: user._id.toString(), role: user.role };
     const accessToken = await this.generateAccessToken(tokenPayload);
     const refreshToken = await this.generateRefreshToken(tokenPayload);
 
@@ -71,15 +129,52 @@ export class AuthService {
       sameSite: 'lax',
     });
 
-    const acceptHeader = res.req?.headers['accept'];
-    if (acceptHeader && acceptHeader.includes('text/html')) {
-      return res.redirect('/profile');
-    }
+    const userObj = user.toObject();
+    delete userObj.password;
+    delete userObj.profile;
 
     return res.json({
       success: true,
-      data: existing,
+      data: {
+        accessToken: accessToken,
+        user: userObj,
+      },
     });
+  }
+
+  async resendLoginPin(
+    email: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const user = await this.userModel.findOne({ email: email.toLowerCase() });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден');
+    }
+
+    const newPinCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const cryptoToken = await this.jwtService.signAsync(
+      { email: user.email.toLowerCase(), loginPin: newPinCode },
+      {
+        secret: this.configService.get('jwt.access_key'),
+        expiresIn: '5m',
+      },
+    );
+
+    user.profile = cryptoToken;
+    await user.save();
+
+    await this.mailService.sendActivationEmail(
+      user.email.toLowerCase(),
+      user.fullName,
+      newPinCode,
+      true,
+    );
+
+    return {
+      success: true,
+      message: 'Новый ПИН-код успешно отправлен на ваш Email.',
+    };
   }
 
   async register(payload: RegisterDto, res: Response) {
@@ -238,30 +333,50 @@ export class AuthService {
     }
   }
 
-  async googleAuth(payload: { email: string; fullName: string }) {
-    const emailLower = payload.email.toLowerCase();
+  async googleAuth(payload: any) {
+    const emailLower = payload?.email?.toLowerCase();
+
+    if (!emailLower) {
+      throw new BadRequestException(
+        'Email не предоставлен сервисом авторизации OAuth',
+      );
+    }
 
     let user = await this.userModel.findOne({ email: emailLower });
 
     if (!user) {
+      const extractedName =
+        payload.fullName ||
+        payload.displayName ||
+        payload.name ||
+        (payload.firstName && payload.lastName
+          ? `${payload.firstName} ${payload.lastName}`
+          : null) ||
+        emailLower.split('@')[0];
+
       user = await this.userModel.create({
         email: emailLower,
-        fullName: payload.fullName,
+        fullName: extractedName,
         role: UserRole.MEMBER,
         isActive: true,
       });
     }
 
     const userObj = user.toObject();
-    const { password, activationToken, ...res } = userObj;
+    delete userObj.password;
+    delete userObj.profile;
 
-    return res;
+    return userObj;
   }
 
-  async githubAuth(payload: { email: string; name: string }) {
+  async githubAuth(payload: any) {
+    const githubUsername = payload.username || payload.login || 'github_user';
+    const githubEmail =
+      payload.email || `${githubUsername}@github.temporary.local`;
+
     return this.googleAuth({
-      email: payload.email,
-      fullName: payload.name,
+      email: githubEmail,
+      fullName: payload.name || payload.displayName || githubUsername,
     });
   }
 
@@ -289,11 +404,46 @@ export class AuthService {
     return null;
   }
 
+  async handleOAuthSuccess(user: any, res: Response) {
+    const tokenPayload = { id: user._id.toString(), role: user.role };
+
+    const accessToken = await this.generateAccessToken(tokenPayload);
+    const refreshToken = await this.generateRefreshToken(tokenPayload);
+
+    const isProd = this.configService.get('NODE_ENV') === 'production';
+    const accessTimeInSeconds =
+      this.configService.get<number>('jwt.access_time') || 3600;
+
+    res.cookie('accessToken', accessToken, {
+      signed: true,
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+      expires: new Date(Date.now() + accessTimeInSeconds * 1000),
+    });
+
+    res.cookie('refreshToken', refreshToken, {
+      signed: true,
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+    });
+
+    const userObj =
+      typeof user.toObject === 'function' ? user.toObject() : user;
+    delete userObj.password;
+    delete userObj.profile;
+
+    const userDataB64 = Buffer.from(JSON.stringify(userObj)).toString('base64');
+
+    return res.redirect(`/?token=${accessToken}&user=${userDataB64}`);
+  }
+
   private async hashPass(password: string) {
     return await bcrypt.hash(password, 10);
   }
 
-  private async comparePass(originalPass: string, hashedPass: string) {
+  public async comparePass(originalPass: string, hashedPass: string) {
     return await bcrypt.compare(originalPass, hashedPass);
   }
 

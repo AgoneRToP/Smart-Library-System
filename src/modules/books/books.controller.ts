@@ -12,13 +12,8 @@ import {
   BadRequestException,
   UploadedFile,
 } from '@nestjs/common';
-import { CacheInterceptor, CacheKey, CacheTTL } from '@nestjs/cache-manager';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiConsumes,
-} from '@nestjs/swagger';
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { BooksService } from './books.service';
 import { CreateBookDto } from './dtos/create-book.dto';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -27,7 +22,8 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '@/common/enums/role.enum';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'node:path';
+import { extname, resolve } from 'node:path';
+import { Protected } from '@/common/decorators';
 
 @ApiTags('Books')
 @Controller('books')
@@ -35,11 +31,10 @@ export class BooksController {
   constructor(private readonly booksService: BooksService) {}
 
   @Post()
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Создать новую книгу (только администратор)' })
+  @Protected(true)
   @UseGuards(AuthGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
-  create(@Body() createBookDto: CreateBookDto) {
+  async create(@Body() createBookDto: CreateBookDto) {
     return this.booksService.create(createBookDto);
   }
 
@@ -51,6 +46,20 @@ export class BooksController {
     return this.booksService.findAll(search);
   }
 
+  @Get('/search-api')
+  async searchApi(@Query('q') query: string) {
+    if (!query || query.length < 2) return { data: [] };
+    try {
+      const books = await this.booksService.findLive(query);
+      const cleanBooks = books.map((doc) =>
+        typeof doc.toObject === 'function' ? doc.toObject() : doc,
+      );
+      return { data: cleanBooks };
+    } catch (error) {
+      return { data: [] };
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get book by ID' })
   findOne(@Param('id') id: string) {
@@ -58,6 +67,7 @@ export class BooksController {
   }
 
   @Put(':id')
+  @Protected(true)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Обновить сведения о книге (только администратор)' })
   @UseGuards(AuthGuard, RolesGuard)
@@ -70,6 +80,7 @@ export class BooksController {
   }
 
   @Delete(':id')
+  @Protected(true)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Удаление книги (только администратор)' })
   @UseGuards(AuthGuard, RolesGuard)
@@ -79,15 +90,13 @@ export class BooksController {
   }
 
   @Post(':id/upload-cover')
-  @ApiBearerAuth()
-  @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Upload book cover (Admin only)' })
+  @Protected(true)
   @UseGuards(AuthGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
   @UseInterceptors(
     FileInterceptor('file', {
       storage: diskStorage({
-        destination: './uploads/books',
+        destination: resolve('.', 'uploads', 'books'),
         filename: (req, file, callback) => {
           const uniqueSuffix =
             Date.now() + '-' + Math.round(Math.random() * 1e9);

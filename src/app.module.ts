@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { AppController } from './app.controller';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
+import { TelegramModule } from './modules/telegram/telegram.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { redisStore } from 'cache-manager-redis-yet';
     UsersModule,
     BooksModule,
     BorrowModule,
+    TelegramModule,
   ],
   providers: [
     {

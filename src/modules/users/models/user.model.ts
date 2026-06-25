@@ -1,4 +1,3 @@
-// src/modules/users/schemas/user.schema.ts
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, SchemaTypes } from 'mongoose';
 import { UserRole } from '../../../common/enums/role.enum';
@@ -19,7 +18,10 @@ export class User extends Document {
     required: true,
     unique: true,
     lowercase: true,
-    trim: true,
+    match: [
+      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
+      'Пожалуйста, введите корректный email',
+    ],
   })
   email: string;
 
@@ -45,6 +47,9 @@ export class User extends Document {
 
   @Prop({ type: SchemaTypes.String })
   activationToken: string;
+
+  @Prop({ type: String, default: null, index: true })
+  telegramChatId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

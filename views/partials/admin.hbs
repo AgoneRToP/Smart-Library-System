@@ -1,0 +1,46 @@
+<div id="admin-panel"
+  class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xl w-full max-w-4xl relative mx-4">
+    <button onclick="toggleModal('admin-panel')"
+      class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-semibold focus:outline-none">&times;</button>
+
+    <div class="border-b border-slate-100 pb-4 mb-6">
+      <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">🛠️ Панель управления: Добавить книгу</h2>
+      <p class="text-slate-500 text-sm mt-0.5">Добавление новых экземпляров в единую базу данных MongoDB.</p>
+    </div>
+    <form id="add-book-form" onsubmit="handleAddBook(event)"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Название книги</label>
+        <input type="text" id="add-title" required
+          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Автор</label>
+        <input type="text" id="add-author" required
+          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">ISBN код</label>
+        <input type="text" id="add-isbn" required
+          class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Год</label>
+          <input type="number" id="add-year" required
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase mb-1">Копии</label>
+          <input type="number" id="add-copies" min="1" required
+            class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+      </div>
+      <div>
+        <button type="submit"
+          class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm font-semibold">Сохранить</button>
+      </div>
+    </form>
+  </div>
+</div>

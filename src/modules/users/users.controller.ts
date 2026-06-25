@@ -1,52 +1,53 @@
-import { Protected, Roles } from '@/common/decorators';
-import { UserRole } from '@/common/enums/role.enum';
 import {
-  Body,
   Controller,
   Get,
-  Post,
-  Render,
-  Res,
+  Delete,
+  Param,
+  Patch,
+  Body,
   UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard, RolesGuard } from '@/common/guards';
-import { ChangeRoleDto } from './dtos';
+import { AuthGuard } from '../../common/guards/auth.guard';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { Protected } from '../../common/decorators/protected.decorator';
+import { UserRole } from '../../common/enums/role.enum';
 
-@Controller('admin/users')
-@UseGuards(AuthGuard, RolesGuard)
-@Protected(true)
+@Controller('users')
 export class UsersController {
-  constructor(private readonly service: UsersService) {}
+  constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @Protected(true)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
-  @Render('admin/users-list')
-  async getAll() {
-    const usersResponse = await this.service.getAll();
-    const rawUsers = usersResponse?.data || usersResponse;
-
-    const cleanUsers = rawUsers ? JSON.parse(JSON.stringify(rawUsers)) : [];
-
+  async findAll() {
+    const users = await this.usersService.findAll();
     return {
-      title: 'Управление пользователями',
-      users: cleanUsers,
+      success: true,
+      data: users,
     };
   }
 
-  @Post('change-role')
+  @Delete(':id')
+  @Protected(true)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles([UserRole.ADMIN])
-  async changeRole(@Body() changeRoleDto: ChangeRoleDto, @Res() res: any) {
-    await this.service.changeUserRole(changeRoleDto);
+  async remove(@Param('id') id: string) {
+    await this.usersService.remove(id);
+    return { success: true, message: 'Пользователь успешно удален' };
+  }
 
-    const acceptHeader = res.req?.headers['accept'];
-    if (acceptHeader && acceptHeader.includes('text/html')) {
-      return res.redirect('/admin/users');
-    }
-
-    return res.json({
-      success: true,
-      message: 'Роль пользователя успешно обновлена',
-    });
+  @Patch(':id/status')
+  @Protected(true)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles([UserRole.ADMIN])
+  async toggleStatus(
+    @Param('id') id: string,
+    @Body() body: { isActive: boolean },
+  ) {
+    await this.usersService.updateStatus(id, body.isActive);
+    return { success: true, message: 'Статус пользователя изменен' };
   }
 }

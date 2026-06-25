@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
@@ -21,7 +22,7 @@ export class AuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-    private readonly moduleRef: ModuleRef, 
+    private readonly moduleRef: ModuleRef,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -55,19 +56,46 @@ export class AuthGuard implements CanActivate {
       this.usersService = this.moduleRef.get(UsersService, { strict: false });
     }
 
-    const userResponse = await this.usersService.getOne(decoded.id);
+    const userResponse = await this.usersService.findOne(decoded.id);
     const dbUser = userResponse?.data || userResponse;
 
     if (!dbUser) {
-      throw new UnauthorizedException('Пользователь не найден в системе клиники');
+      throw new UnauthorizedException(
+        'Пользователь не найден в системе библиотеки',
+      );
     }
 
-    const status = String(dbUser.isActive || '').toLowerCase();
-    if (status !== 'active') {
-      throw new UnauthorizedException('Аккаунт не активирован. Проверьте вашу почту.');
+    if (!dbUser) {
+      throw new UnauthorizedException(
+        'Пользователь не найден в системе библиотеки',
+      );
     }
 
-    request.user = JSON.parse(JSON.stringify(dbUser));
+    if (
+      dbUser.isActive === false ||
+      String(dbUser.isActive).toLowerCase() === 'false'
+    ) {
+      if (dbUser.profile && dbUser.profile !== '') {
+        throw new UnauthorizedException(
+          'Ваш аккаунт не активирован. Пожалуйста, проверьте почту и введите ПИН-код.',
+        );
+      } else {
+        throw new ForbiddenException(
+          'Доступ запрещен: Ваш аккаунт заблокирован администратором библиотеки.',
+        );
+      }
+    }
+
+    const cleanUser =
+      typeof dbUser.toObject === 'function' ? dbUser.toObject() : dbUser;
+
+    request.user = {
+      id: cleanUser._id?.toString() || decoded.id,
+      email: cleanUser.email,
+      fullName: cleanUser.fullName,
+      role: cleanUser.role || decoded.role,
+    };
+
     return true;
   }
 
@@ -117,7 +145,7 @@ export class AuthGuard implements CanActivate {
 
       const newAccessToken = await this.generateAccessToken(clean);
       const isProd = this.configService.get('NODE_ENV') === 'production';
-      
+
       response.cookie('accessToken', newAccessToken, {
         signed: true,
         httpOnly: true,
@@ -132,7 +160,9 @@ export class AuthGuard implements CanActivate {
       return clean;
     } catch (error: unknown) {
       if (error instanceof TokenExpiredError) {
-        throw new UnauthorizedException('Срок действия токена обновления истек. Пожалуйста, войдите снова.');
+        throw new UnauthorizedException(
+          'Срок действия токена обновления истек. Пожалуйста, войдите снова.',
+        );
       }
       if (error instanceof JsonWebTokenError) {
         throw new UnauthorizedException('Токен обновления недействителен.');
@@ -142,7 +172,10 @@ export class AuthGuard implements CanActivate {
     }
   }
 
-  private async generateAccessToken(payload: { id: string; role: UserRole }): Promise<string> {
+  private async generateAccessToken(payload: {
+    id: string;
+    role: UserRole;
+  }): Promise<string> {
     return this.jwtService.signAsync(payload, {
       secret: this.configService.get('jwt.access_key'),
       expiresIn: `${this.configService.get<number>('jwt.access_time') || 3600}s`,

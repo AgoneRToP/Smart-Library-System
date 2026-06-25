@@ -1,0 +1,86 @@
+<div
+  id='login-modal'
+  class='hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50'
+>
+  <div
+    class='bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 relative mx-4'
+  >
+    <button
+      onclick="toggleModal('login-modal')"
+      class='absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-2xl font-semibold focus:outline-none'
+    >&times;</button>
+    <h3 class='text-xl font-bold text-slate-900 mb-5 text-center'>Вход в систему</h3>
+
+    <form onsubmit='handleLoginStepOne(event)' class='space-y-4'>
+      <div>
+        <label
+          class='block text-xs font-semibold text-slate-500 uppercase mb-1'
+        >Email</label>
+        <input
+          type='email'
+          id='login-email'
+          required
+          class='w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none'
+        />
+      </div>
+      <div>
+        <label
+          class='block text-xs font-semibold text-slate-500 uppercase mb-1'
+        >Пароль</label>
+        <input
+          type='password'
+          id='login-password'
+          required
+          class='w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none'
+        />
+      </div>
+      <button
+        type='submit'
+        class='w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 rounded-lg text-sm transition shadow-sm mt-2'
+      >
+        Получить код входа
+      </button>
+    </form>
+
+    <div class='relative my-5'>
+      <div class='absolute inset-0 flex items-center'><div
+          class='w-full border-t border-slate-200'
+        ></div></div>
+      <div class='relative flex justify-center text-xs uppercase'><span
+          class='bg-white px-2 text-slate-400 font-medium'
+        >или войти через</span></div>
+    </div>
+
+    <div class='space-y-2.5 w-full flex flex-col'>
+      <a
+        href='/auth/google'
+        class='w-full flex items-center justify-center gap-3 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-medium py-2 rounded-lg text-sm transition shadow-sm'
+      >
+        <svg class='w-4 h-4' viewBox='0 0 24 24'><path
+            fill='#4285F4'
+            d='M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.29 1.5-1.14 2.77-2.4 3.61v3h3.86c2.26-2.08 3.67-5.14 3.67-8.46z'
+          /><path
+            fill='#34A853'
+            d='M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.21v3.11C3.18 21.88 7.31 24 12 24z'
+          /><path
+            fill='#FBBC05'
+            d='M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.6H1.21C.44 8.13 0 9.89 0 11.72s.44 3.59 1.21 5.12l4.06-3.11z'
+          /><path
+            fill='#EA4335'
+            d='M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.49l4.06 3.11c.95-2.85 3.6-4.96 6.73-4.96z'
+          /></svg>
+        Google
+      </a>
+      <a
+        href='/auth/github'
+        class='w-full flex items-center justify-center gap-3 bg-slate-900 hover:bg-slate-800 text-white font-medium py-2 rounded-lg text-sm transition shadow-sm'
+      >
+        <svg class='w-4 h-4' viewBox='0 0 24 24'><path
+            fill='currentColor'
+            d='M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z'
+          /></svg>
+        GitHub
+      </a>
+    </div>
+  </div>
+</div>
